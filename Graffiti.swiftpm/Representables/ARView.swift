@@ -1,0 +1,22 @@
+//
+//  ARView.swift
+//  Graffiti
+//
+//  Created by Kyoya Yamaguchi on 2024/02/18.
+//
+
+import SwiftUI
+import RealityKit
+
+struct ARViewRepresentable: UIViewRepresentable {
+    
+    @Binding var arView: ARView
+    
+    func makeUIView(context: Context) -> ARView {
+        arView.environment.sceneUnderstanding.options.insert(.occlusion)
+        return arView
+    }
+    
+    func updateUIView(_ uiView: ARView, context: Context) {}
+}
+

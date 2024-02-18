@@ -10,7 +10,7 @@ import AppleProductTypes
 let package = Package(
     name: "Graffiti",
     platforms: [
-        .iOS("16.0")
+        .iOS("17.0")
     ],
     products: [
         .iOSApplication(
@@ -21,16 +21,17 @@ let package = Package(
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .placeholder(icon: .magicWand),
-            accentColor: .presetColor(.blue),
+            accentColor: .presetColor(.indigo),
             supportedDeviceFamilies: [
                 .pad,
-                .phone
             ],
             supportedInterfaceOrientations: [
-                .portrait,
                 .landscapeRight,
                 .landscapeLeft,
-                .portraitUpsideDown(.when(deviceFamilies: [.pad]))
+            ],
+            capabilities: [
+                .camera(purposeString: "For AR"),
+                .photoLibraryAdd(purposeString: "To save photos and videos")
             ]
         )
     ],
