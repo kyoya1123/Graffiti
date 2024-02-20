@@ -25,19 +25,32 @@ class ViewModel: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var isShowPreviewVideo = false
     
+    @Published var drawingHistory: [Data] = []
+    @Published var drawingFromHistory = PKDrawing()
+    
     var textureTimer: Timer!
     var nodes = [SCNNode]()
     var number = 0
     
     let images = [UIImage(named: "drawing0"), UIImage(named: "drawing1"), UIImage(named: "drawing2")]
     
+    var drawingImage: UIImage {
+        canvasView.drawing.image(from: canvasView.bounds, scale: 3)
+    }
+    
     override init() {
         super.init()
-        textureTimer = .scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            self.number = self.number == 2 ? 0 : self.number + 1
-            self.updateTexture()
-        }
+//        textureTimer = .scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+//            self.number = self.number == 2 ? 0 : self.number + 1
+//            self.updateTexture()
+//        }
         
+        
+        setupGesture()
+        updateToolPicker()
+    }
+    
+    func setupGesture() {
         let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(pinch(_:)))
         sceneView.addGestureRecognizer(pinchGestureRecognizer)
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(drag(_:)))
@@ -82,7 +95,14 @@ class ViewModel: NSObject, ObservableObject {
     }
     
     func addDrawing() {
-        let drawing = canvasView.drawing.image(from: canvasView.bounds, scale: 3)
+        if canvasView.drawing != drawingFromHistory {
+            withAnimation {
+                drawingHistory.append(canvasView.drawing.dataRepresentation())
+            }
+        } else {
+            drawingFromHistory = PKDrawing()
+        }
+        let drawing = drawingImage
         let baseNum = 0.6 / CGFloat(drawing.size.height)
         let planeNode = SCNNode(geometry: SCNPlane(width: CGFloat(drawing.size.width) * baseNum, height: CGFloat(drawing.size.height) * baseNum))
         planeNode.geometry!.firstMaterial?.diffuse.contents = drawing
@@ -94,13 +114,13 @@ class ViewModel: NSObject, ObservableObject {
         canvasView.drawing = PKDrawing()
     }
     
-    func updateTexture() {
+//    func updateTexture() {
 //        if !nodes.isEmpty {
 //            nodes.forEach {
 //                $0.geometry?.firstMaterial?.diffuse.contents = images[number]
 //            }
 //        }
-    }
+//    }
     
     
     
@@ -139,6 +159,16 @@ class ViewModel: NSObject, ObservableObject {
         //                guard let image = image else { return }
         //                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
         //            }
+    }
+    
+    func updateToolPicker() {
+        toolPicker.setVisible(isCanvasVisible, forFirstResponder: canvasView)
+        if isCanvasVisible {
+            DispatchQueue.main.async {
+                self.toolPicker.addObserver(self.canvasView)
+                self.canvasView.becomeFirstResponder()
+            }
+        }
     }
     
     func startRecord() {

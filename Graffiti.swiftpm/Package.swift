@@ -20,14 +20,17 @@ let package = Package(
             teamIdentifier: "3X7LEN654Y",
             displayVersion: "1.0",
             bundleVersion: "1",
-            appIcon: .placeholder(icon: .magicWand),
+            appIcon: .placeholder(icon: .palette),
             accentColor: .presetColor(.indigo),
             supportedDeviceFamilies: [
-                .pad
+                .pad,
+                .phone
             ],
             supportedInterfaceOrientations: [
+                .portrait,
                 .landscapeRight,
-                .landscapeLeft
+                .landscapeLeft,
+                .portraitUpsideDown(.when(deviceFamilies: [.pad]))
             ],
             capabilities: [
                 .camera(purposeString: "For AR"),

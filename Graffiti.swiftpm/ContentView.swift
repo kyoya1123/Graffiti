@@ -25,8 +25,33 @@ struct ContentView: View {
                             stopRecord()
                         }
                     }
-                CanvasViewRepresentable(viewModel: viewModel, canvasView: $viewModel.canvasView, selectedTool: $viewModel.selectedTool, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
-                    .opacity(viewModel.isRecording || !viewModel.isCanvasVisible ? 0 : 1)
+                ZStack {
+                    CanvasViewRepresentable(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button {
+                                viewModel.canvasView.drawing = PKDrawing()
+                            } label: {
+                                Image(systemName: "rays")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.red)
+                                    .padding()
+                                    .background(
+                                        .ultraThinMaterial
+                                    )
+                                    .clipShape(.circle)
+                            }
+                            .opacity(viewModel.isCanvasBlank ? 0 : 1)
+                        }
+                    }
+                    .padding(20)
+                }
+                .opacity(viewModel.isRecording || !viewModel.isCanvasVisible ? 0 : 1)
+                    Image(uiImage: viewModel.drawingImage)
+                        .resizable()
+                        .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
             }
             .ignoresSafeArea()
             ZStack {
@@ -36,27 +61,22 @@ struct ContentView: View {
                             Button {
                                 viewModel.addDrawing()
                             } label: {
-                                Image(systemName: "plus.app.fill")
+                                Image(systemName: "plus.viewfinder")
                                     .font(.system(size: 30))
                             }
                             .disabled(viewModel.isCanvasVisible || viewModel.isCanvasBlank)
                             
                             Button {
                                 viewModel.isCanvasVisible.toggle()
-                                viewModel.toolPicker.setVisible(viewModel.isCanvasVisible, forFirstResponder: viewModel.canvasView)
-                                if viewModel.isCanvasVisible {
-                                    DispatchQueue.main.async {
-                                        viewModel.toolPicker.addObserver(viewModel.canvasView)
-                                        viewModel.canvasView.becomeFirstResponder()
-                                    }
-                                }
+                                viewModel.updateToolPicker()
                             } label: {
-                                Image(systemName: viewModel.isCanvasVisible ? "eye" : "eye.slash")
+                                Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")//"scribble.variable")
+                                    .font(.system(size: 30))
                             }
-                            Button("save") {
-                                UIImageWriteToSavedPhotosAlbum(UIImage(data: viewModel.canvasView.drawing.image(from: viewModel.canvasView.bounds, scale: 3).pngData()!)!, nil, nil, nil)
-                                viewModel.canvasView.drawing = PKDrawing()
-                            }
+//                            Button("save") {
+//                                UIImageWriteToSavedPhotosAlbum(UIImage(data: viewModel.drawingImage.pngData()!)!, nil, nil, nil)
+//                                viewModel.canvasView.drawing = PKDrawing()
+//                            }
                         }
                         .padding()
                         .background(
@@ -66,10 +86,8 @@ struct ContentView: View {
                         Spacer()
                     }
                     Spacer()
-                    ColorPicker("", selection: $viewModel.selectedColor, supportsOpacity: false)
-                        .onChange(of: viewModel.selectedColor) {
-                            viewModel.selectedTool = PKInkingTool(.fountainPen, color: UIColor(viewModel.selectedColor))
-                        }
+                    historyCarousel
+                        .opacity(viewModel.isCanvasVisible || viewModel.drawingHistory.isEmpty ? 0 : 1)
                 }
                 HStack {
                     Spacer()
@@ -124,13 +142,43 @@ struct ContentView: View {
     func stopRecord() {
         RPScreenRecorder.shared().stopRecording { preview, error in
             viewModel.isRecording = false
-            
             guard let preview = preview else { return }
             viewModel.replayView = RPPreviewView(rpPreviewViewController: preview, isShow: $viewModel.isShowPreviewVideo)
             withAnimation {
                 viewModel.isShowPreviewVideo = true
             }
         }
+    }
+    
+    var historyCarousel: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 8) {
+                ForEach(viewModel.drawingHistory.reversed(), id: \.self) { drawingData in
+                    let drawing = try! PKDrawing(data: drawingData)
+                    Button {
+                        viewModel.canvasView.drawing = drawing
+                        viewModel.drawingFromHistory = drawing
+                    } label: {
+                        Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .background(
+                                .ultraThinMaterial
+                                    .opacity(0.2)
+                            )
+                            .environment(\.colorScheme, .dark)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+            .padding(8)
+        }
+        .background(
+            .thinMaterial
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .frame(height: 100)
+        .padding(.horizontal)
     }
 }
 
