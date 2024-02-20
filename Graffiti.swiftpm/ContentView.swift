@@ -19,14 +19,14 @@ struct ContentView: View {
         ZStack {
             Group {
 //                ARViewRepresentable(arView: $viewModel.arView)
-                ARSCNViewRepresentable(sceneView: $viewModel.sceneView)
+                ARSceneView(sceneView: $viewModel.sceneView)
                     .onTapGesture {
                         if viewModel.isRecording {
-                            stopRecord()
+                            stopRecording()
                         }
                     }
                 ZStack {
-                    CanvasViewRepresentable(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
+                    CanvasView(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
                     VStack {
                         Spacer()
                         HStack {
@@ -118,7 +118,7 @@ struct ContentView: View {
                         }
                         .alert("Start Recording", isPresented: $isShowingRecordAlert) {
                             Button("OK") {
-                                viewModel.startRecord()
+                                viewModel.startRecording()
                             }
                         } message: {
                             Text("Tap screen to stop recording")
@@ -129,23 +129,12 @@ struct ContentView: View {
             }
             .padding()
             .opacity(viewModel.isRecording ? 0 : 1)
-            if viewModel.isShowPreviewVideo {
+            if viewModel.showPreviewVideo {
                 viewModel.replayView
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .transition(.move(edge: .bottom))
                     .edgesIgnoringSafeArea(.all)
                 
-            }
-        }
-    }
-    
-    func stopRecord() {
-        RPScreenRecorder.shared().stopRecording { preview, error in
-            viewModel.isRecording = false
-            guard let preview = preview else { return }
-            viewModel.replayView = RPPreviewView(rpPreviewViewController: preview, isShow: $viewModel.isShowPreviewVideo)
-            withAnimation {
-                viewModel.isShowPreviewVideo = true
             }
         }
     }
@@ -179,6 +168,17 @@ struct ContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .frame(height: 100)
         .padding(.horizontal)
+    }
+    
+    func stopRecording() {
+        RPScreenRecorder.shared().stopRecording { preview, error in
+            viewModel.isRecording = false
+            guard let preview = preview else { return }
+            viewModel.replayView = ReplayPreviewView(replayPreviewViewController: preview, isShow: $viewModel.showPreviewVideo)
+            withAnimation {
+                viewModel.showPreviewVideo = true
+            }
+        }
     }
 }
 

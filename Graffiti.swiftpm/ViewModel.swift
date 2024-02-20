@@ -16,23 +16,22 @@ import SceneKit
 class ViewModel: NSObject, ObservableObject {
     //    @Published var arView = ARView()
     @Published var sceneView = ARSCNView()
+    
     @Published var canvasView = PKCanvasView()
     @Published var toolPicker = PKToolPicker()
     @Published var isCanvasVisible = false
     @Published var isCanvasBlank = true
-    
-    @Published var replayView: RPPreviewView!
-    @Published var isRecording = false
-    @Published var isShowPreviewVideo = false
-    
     @Published var drawingHistory: [Data] = []
-    @Published var drawingFromHistory = PKDrawing()
+    var drawingFromHistory = PKDrawing()
     
-    var textureTimer: Timer!
-    var nodes = [SCNNode]()
-    var number = 0
+    @Published var replayView: ReplayPreviewView!
+    @Published var isRecording = false
+    @Published var showPreviewVideo = false
     
-    let images = [UIImage(named: "drawing0"), UIImage(named: "drawing1"), UIImage(named: "drawing2")]
+    //    var textureTimer: Timer!
+    //    var nodes = [SCNNode]()
+    //    var number = 0
+    //    let images = [UIImage(named: "drawing0"), UIImage(named: "drawing1"), UIImage(named: "drawing2")]
     
     var drawingImage: UIImage {
         canvasView.drawing.image(from: canvasView.bounds, scale: 3)
@@ -40,12 +39,11 @@ class ViewModel: NSObject, ObservableObject {
     
     override init() {
         super.init()
-//        textureTimer = .scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-//            self.number = self.number == 2 ? 0 : self.number + 1
-//            self.updateTexture()
-//        }
-        
-        
+        //        textureTimer = .scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+        //            self.number = self.number == 2 ? 0 : self.number + 1
+        //            self.updateTexture()
+        //        }
+        RPScreenRecorder.shared().isMicrophoneEnabled = true
         setupGesture()
         updateToolPicker()
     }
@@ -62,9 +60,9 @@ class ViewModel: NSObject, ObservableObject {
         let hitTestResults = sceneView.hitTest(tapRecognizer)
         guard let node = hitTestResults.first?.node, recognizer.state == .changed else { return }
         
-        let pinchScaleX = Float(recognizer.scale) * node.scale.x
-        let pinchScaleY =  Float(recognizer.scale) * node.scale.y
-        node.scale = SCNVector3(x: Float(pinchScaleX), y: Float(pinchScaleY), z: 1)
+        let scalex = Float(recognizer.scale) * node.scale.x
+        let scaley =  Float(recognizer.scale) * node.scale.y
+        node.scale = SCNVector3(x: Float(scalex), y: Float(scaley), z: 1)
         recognizer.scale = 1
     }
     
@@ -109,18 +107,18 @@ class ViewModel: NSObject, ObservableObject {
         let targetPos = SCNVector3(0, 0, -0.72)
         planeNode.position = sceneView.pointOfView!.convertPosition(targetPos, to: nil)
         planeNode.rotation = sceneView.pointOfView!.rotation
-        nodes.append(planeNode)
+        //        nodes.append(planeNode)
         sceneView.scene.rootNode.addChildNode(planeNode)
         canvasView.drawing = PKDrawing()
     }
     
-//    func updateTexture() {
-//        if !nodes.isEmpty {
-//            nodes.forEach {
-//                $0.geometry?.firstMaterial?.diffuse.contents = images[number]
-//            }
-//        }
-//    }
+    //    func updateTexture() {
+    //        if !nodes.isEmpty {
+    //            nodes.forEach {
+    //                $0.geometry?.firstMaterial?.diffuse.contents = images[number]
+    //            }
+    //        }
+    //    }
     
     
     
@@ -171,16 +169,13 @@ class ViewModel: NSObject, ObservableObject {
         }
     }
     
-    func startRecord() {
-        RPScreenRecorder.shared().isMicrophoneEnabled = true
+    func startRecording() {
         if !RPScreenRecorder.shared().isRecording {
-            self.isRecording = true
-            RPScreenRecorder.shared().startRecording { (error) in
-                guard error == nil else {
-                    print("There was an error starting the recording.")
-                    return
+            isRecording = true
+            RPScreenRecorder.shared().startRecording { error in
+                if let error = error {
+                    print(error.localizedDescription)
                 }
-                print("Started Recording Successfully")
             }
         }
     }
@@ -189,37 +184,5 @@ class ViewModel: NSObject, ObservableObject {
 extension ViewModel: PKCanvasViewDelegate {
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         isCanvasBlank = canvasView.drawing.strokes.isEmpty
-    }
-}
-
-struct RPPreviewView: UIViewControllerRepresentable {
-    let rpPreviewViewController: RPPreviewViewController
-    @Binding var isShow: Bool
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    func makeUIViewController(context: Context) -> RPPreviewViewController {
-        rpPreviewViewController.previewControllerDelegate = context.coordinator
-        rpPreviewViewController.modalPresentationStyle = .fullScreen
-        
-        return rpPreviewViewController
-    }
-    
-    func updateUIViewController(_ uiViewController: RPPreviewViewController, context: Context) { }
-    
-    class Coordinator: NSObject, RPPreviewViewControllerDelegate {
-        var parent: RPPreviewView
-        
-        init(_ parent: RPPreviewView) {
-            self.parent = parent
-        }
-        
-        func previewControllerDidFinish(_ previewController: RPPreviewViewController) {
-            withAnimation {
-                parent.isShow = false
-            }
-        }
     }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 import RealityKit
 
-struct ARViewRepresentable: UIViewRepresentable {
+struct RealityView: UIViewRepresentable {
     
     @Binding var arView: ARView
     

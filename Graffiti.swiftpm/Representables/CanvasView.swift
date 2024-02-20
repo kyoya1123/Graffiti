@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 import PencilKit
 
-struct CanvasViewRepresentable: UIViewRepresentable {
+struct CanvasView: UIViewRepresentable {
 
     @ObservedObject var viewModel: ViewModel
 

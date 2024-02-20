@@ -8,7 +8,7 @@
 import SwiftUI
 import ARKit
 
-struct ARSCNViewRepresentable: UIViewRepresentable {
+struct ARSceneView: UIViewRepresentable {
     
     @Binding var sceneView: ARSCNView
     
