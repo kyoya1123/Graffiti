@@ -18,54 +18,63 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             Group {
-//                ARViewRepresentable(arView: $viewModel.arView)
                 ARSceneView(sceneView: $viewModel.sceneView)
                     .onTapGesture {
                         if viewModel.isRecording {
                             stopRecording()
                         }
                     }
-                ZStack {
-                    CanvasView(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
-                    VStack {
-                        Spacer()
-                        HStack {
+                Group {
+                    ZStack {
+                        CanvasView(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
+                        VStack {
                             Spacer()
-                            Button {
-                                viewModel.canvasView.drawing = PKDrawing()
-                            } label: {
-                                Image(systemName: "rays")
-                                    .font(.system(size: 30))
-                                    .foregroundColor(.red)
-                                    .padding()
-                                    .background(
-                                        .ultraThinMaterial
-                                    )
-                                    .clipShape(.circle)
+                            HStack {
+                                Button {
+                                    viewModel.canvasView.drawing = PKDrawing()
+                                } label: {
+                                    Image(systemName: "rays")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.red)
+                                        .padding()
+                                        .background(
+                                            .ultraThinMaterial
+                                        )
+                                        .clipShape(.circle)
+                                }
+                                .opacity(viewModel.isCanvasBlank ? 0 : 1)
+                                Spacer()
                             }
-                            .opacity(viewModel.isCanvasBlank ? 0 : 1)
                         }
+                        .padding(20)
                     }
-                    .padding(20)
-                }
-                .opacity(viewModel.isRecording || !viewModel.isCanvasVisible ? 0 : 1)
+                    .opacity(!viewModel.isCanvasVisible ? 0 : 1)
                     Image(uiImage: viewModel.drawingImage)
                         .resizable()
                         .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+                        .onTapGesture {
+                            viewModel.addDrawing()
+                        }
+                }
+                .opacity(viewModel.isRecording ? 0 : 1)
             }
             .ignoresSafeArea()
             ZStack {
                 VStack {
+                    Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
+                        .font(.system(size: 20, weight: .medium))
+                        .baselineOffset(-0.5)
+                        .padding(20)
+                        .background(
+                            .ultraThinMaterial
+                        )
+                        .clipShape(Capsule())
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+                    Spacer()
+                }
+                VStack {
                     HStack {
-                        HStack(spacing: 16) {
-                            Button {
-                                viewModel.addDrawing()
-                            } label: {
-                                Image(systemName: "plus.viewfinder")
-                                    .font(.system(size: 30))
-                            }
-                            .disabled(viewModel.isCanvasVisible || viewModel.isCanvasBlank)
-                            
                             Button {
                                 viewModel.isCanvasVisible.toggle()
                                 viewModel.updateToolPicker()
@@ -73,16 +82,11 @@ struct ContentView: View {
                                 Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")//"scribble.variable")
                                     .font(.system(size: 30))
                             }
-//                            Button("save") {
-//                                UIImageWriteToSavedPhotosAlbum(UIImage(data: viewModel.drawingImage.pngData()!)!, nil, nil, nil)
-//                                viewModel.canvasView.drawing = PKDrawing()
-//                            }
-                        }
                         .padding()
                         .background(
                             .ultraThinMaterial
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .clipShape(Circle())
                         Spacer()
                     }
                     Spacer()
@@ -96,6 +100,7 @@ struct ContentView: View {
                             viewModel.takePicture()
                         } label: {
                             Image(systemName: "camera.shutter.button.fill")
+                                .font(.system(size: 20))
                                 .foregroundColor(.white)
                                 .padding()
                                 .background(
@@ -108,6 +113,7 @@ struct ContentView: View {
                             isShowingRecordAlert = true
                         } label: {
                             Image(systemName: "record.circle.fill")
+                                .font(.system(size: 20))
                                 .foregroundColor(.white)
                                 .padding()
                                 .background(
