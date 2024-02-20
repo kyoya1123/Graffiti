@@ -23,15 +23,16 @@ let package = Package(
             appIcon: .placeholder(icon: .magicWand),
             accentColor: .presetColor(.indigo),
             supportedDeviceFamilies: [
-                .pad,
+                .pad
             ],
             supportedInterfaceOrientations: [
                 .landscapeRight,
-                .landscapeLeft,
+                .landscapeLeft
             ],
             capabilities: [
                 .camera(purposeString: "For AR"),
-                .photoLibraryAdd(purposeString: "To save photos and videos")
+                .photoLibraryAdd(purposeString: "To save photos and videos"),
+                .microphone(purposeString: "Unknown Usage Description")
             ]
         )
     ],

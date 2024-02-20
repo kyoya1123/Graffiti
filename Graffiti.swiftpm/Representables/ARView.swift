@@ -14,6 +14,7 @@ struct ARViewRepresentable: UIViewRepresentable {
     
     func makeUIView(context: Context) -> ARView {
         arView.environment.sceneUnderstanding.options.insert(.occlusion)
+        arView.renderOptions = [.disableAREnvironmentLighting]
         return arView
     }
     
