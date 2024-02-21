@@ -18,7 +18,7 @@ class ViewModel: NSObject, ObservableObject {
     
     @Published var canvasView = PKCanvasView()
     @Published var toolPicker = PKToolPicker()
-    @Published var isCanvasVisible = false
+    @Published var isCanvasVisible = true
     @Published var isCanvasBlank = true
     @Published var drawingHistory: [Data] = []
     var drawingFromHistory = PKDrawing()
@@ -52,11 +52,13 @@ class ViewModel: NSObject, ObservableObject {
         sceneView.addGestureRecognizer(pinchGestureRecognizer)
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(drag(_:)))
         sceneView.addGestureRecognizer(panGestureRecognizer)
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tap(_:)))
+        sceneView.addGestureRecognizer(tapGestureRecognizer)
     }
     
     @objc func pinch(_ recognizer: UIPinchGestureRecognizer) {
-        let tapRecognizer = recognizer.location(in: sceneView)
-        let hitTestResults = sceneView.hitTest(tapRecognizer)
+        let tapLocation = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(tapLocation)
         guard let node = hitTestResults.first?.node, recognizer.state == .changed else { return }
         
         let scalex = Float(recognizer.scale) * node.scale.x
@@ -91,6 +93,15 @@ class ViewModel: NSObject, ObservableObject {
         }
     }
     
+    @Published var tapSelectedNode: SCNNode?
+    
+    @objc func tap(_ recognizer: UITapGestureRecognizer) {
+        let location = recognizer.location(in: sceneView)
+        let hitTestResults = sceneView.hitTest(location)
+        guard let node = hitTestResults.first?.node else { return }
+        tapSelectedNode = node
+    }
+    
     func addDrawing() {
         if canvasView.drawing != drawingFromHistory {
             withAnimation {
@@ -109,6 +120,13 @@ class ViewModel: NSObject, ObservableObject {
         planeNode.rotation = sceneView.pointOfView!.rotation
         //        nodes.append(planeNode)
         sceneView.scene.rootNode.addChildNode(planeNode)
+    }
+    
+    func removeDrawing() {
+        if let tapSelectedNode = tapSelectedNode {
+            tapSelectedNode.removeFromParentNode()
+        }
+        tapSelectedNode = nil
     }
     
     func takePicture() {

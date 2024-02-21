@@ -61,16 +61,14 @@ struct ContentView: View {
             .ignoresSafeArea()
             ZStack {
                 VStack {
-                    Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
-                        .font(.system(size: 20, weight: .medium))
-                        .baselineOffset(-0.5)
-                        .padding(20)
-                        .background(
-                            .ultraThinMaterial
-                        )
-                        .clipShape(Capsule())
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+                        Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
+                            .font(.system(size: 20, weight: .medium))
+                            .padding(20)
+                            .background(
+                                .ultraThinMaterial
+                            )
+                            .clipShape(Capsule())
+                            .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
                     Spacer()
                 }
                 VStack {
@@ -78,16 +76,31 @@ struct ContentView: View {
                             Button {
                                 viewModel.isCanvasVisible.toggle()
                                 viewModel.updateToolPicker()
+                                viewModel.tapSelectedNode = nil
                             } label: {
-                                Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")//"scribble.variable")
+                                Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")
                                     .font(.system(size: 30))
                             }
                         .padding()
                         .background(
                             .ultraThinMaterial
                         )
-                        .clipShape(Circle())
+                        .clipShape(.circle)
                         Spacer()
+                        if viewModel.tapSelectedNode != nil {
+                            Button {
+                                viewModel.removeDrawing()
+                            } label: {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.red)
+                                    .padding()
+                                    .background(
+                                        .ultraThinMaterial
+                                    )
+                                    .clipShape(.circle)
+                            }
+                        }
                     }
                     Spacer()
                     historyCarousel
@@ -98,6 +111,7 @@ struct ContentView: View {
                     VStack {
                         Button {
                             viewModel.takePicture()
+                            viewModel.tapSelectedNode = nil
                         } label: {
                             Image(systemName: "camera.shutter.button.fill")
                                 .font(.system(size: 20))
@@ -107,10 +121,11 @@ struct ContentView: View {
                                     .ultraThinMaterial
                                 )
                                 .environment(\.colorScheme, .dark)
-                                .clipShape(Circle())
+                                .clipShape(.circle)
                         }
                         Button {
                             isShowingRecordAlert = true
+                            viewModel.tapSelectedNode = nil
                         } label: {
                             Image(systemName: "record.circle.fill")
                                 .font(.system(size: 20))
@@ -120,7 +135,7 @@ struct ContentView: View {
                                     .ultraThinMaterial
                                 )
                                 .environment(\.colorScheme, .dark)
-                                .clipShape(Circle())
+                                .clipShape(.circle)
                         }
                         .alert("Start Recording", isPresented: $isShowingRecordAlert) {
                             Button("OK") {
@@ -153,6 +168,7 @@ struct ContentView: View {
                     Button {
                         viewModel.canvasView.drawing = drawing
                         viewModel.drawingFromHistory = drawing
+                        viewModel.tapSelectedNode = nil
                     } label: {
                         Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
                             .resizable()
