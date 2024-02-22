@@ -14,14 +14,18 @@ struct ContentView: View {
     @ObservedObject var viewModel: ViewModel
     
     @State var isShowingRecordAlert: Bool = false
+    @State var onPlane: Bool = true
     
     var body: some View {
         ZStack {
             Group {
-                ARSceneView(sceneView: $viewModel.sceneView)
-                    .onTapGesture {
+                RealityView(arView: $viewModel.arView)
+//                ARSceneView(sceneView: $viewModel.sceneView)
+                    .onTapGesture { location in
                         if viewModel.isRecording {
                             stopRecording()
+                        } else {
+                            viewModel.tap(location: location)
                         }
                     }
                 Group {
@@ -49,11 +53,11 @@ struct ContentView: View {
                         .padding(20)
                     }
                     .opacity(!viewModel.isCanvasVisible ? 0 : 1)
-                    Image(uiImage: viewModel.drawingImage)
+                    Image(uiImage: viewModel.drawingImage(canvasSize: true))
                         .resizable()
                         .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
-                        .onTapGesture {
-                            viewModel.addDrawing()
+                        .onTapGesture { location in
+                            viewModel.addDrawing(location: location, onPlane: onPlane)
                         }
                 }
                 .opacity(viewModel.isRecording ? 0 : 1)
@@ -61,33 +65,49 @@ struct ContentView: View {
             .ignoresSafeArea()
             ZStack {
                 VStack {
+                    VStack {
                         Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
                             .font(.system(size: 20, weight: .medium))
-                            .padding(20)
-                            .background(
-                                .ultraThinMaterial
-                            )
-                            .clipShape(Capsule())
-                            .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+//                            .padding(20)
+//                            .background(
+//                                .ultraThinMaterial
+//                            )
+//                            .clipShape(Capsule())
+                        HStack {
+                            Picker("Place on", selection: $onPlane) {
+                                Image(systemName: "square.filled.on.square").tag(true)
+                                Image(systemName: "balloon").tag(false)
+                            }
+                            .pickerStyle(.segmented)
+                            .clipShape(RoundedRectangle(cornerRadius: 5, style: .circular))
+                            .frame(width: 300)
+                        }
+                    }
+                    .padding(20)
+                    .background(
+                        .ultraThinMaterial
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
                     Spacer()
                 }
                 VStack {
                     HStack {
-                            Button {
-                                viewModel.isCanvasVisible.toggle()
-                                viewModel.updateToolPicker()
-                                viewModel.tapSelectedNode = nil
-                            } label: {
-                                Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")
-                                    .font(.system(size: 30))
-                            }
+                        Button {
+                            viewModel.isCanvasVisible.toggle()
+                            viewModel.updateToolPicker()
+                            viewModel.tapSelectedEntity = nil
+                        } label: {
+                            Image(systemName: viewModel.isCanvasVisible ? "arkit" : "paintbrush")
+                                .font(.system(size: 30))
+                        }
                         .padding()
                         .background(
                             .ultraThinMaterial
                         )
                         .clipShape(.circle)
                         Spacer()
-                        if viewModel.tapSelectedNode != nil {
+                        if viewModel.tapSelectedEntity != nil {
                             Button {
                                 viewModel.removeDrawing()
                             } label: {
@@ -111,7 +131,7 @@ struct ContentView: View {
                     VStack {
                         Button {
                             viewModel.takePicture()
-                            viewModel.tapSelectedNode = nil
+                            viewModel.tapSelectedEntity = nil
                         } label: {
                             Image(systemName: "camera.shutter.button.fill")
                                 .font(.system(size: 20))
@@ -125,7 +145,7 @@ struct ContentView: View {
                         }
                         Button {
                             isShowingRecordAlert = true
-                            viewModel.tapSelectedNode = nil
+                            viewModel.tapSelectedEntity = nil
                         } label: {
                             Image(systemName: "record.circle.fill")
                                 .font(.system(size: 20))
@@ -168,7 +188,7 @@ struct ContentView: View {
                     Button {
                         viewModel.canvasView.drawing = drawing
                         viewModel.drawingFromHistory = drawing
-                        viewModel.tapSelectedNode = nil
+                        viewModel.tapSelectedEntity = nil
                     } label: {
                         Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
                             .resizable()
