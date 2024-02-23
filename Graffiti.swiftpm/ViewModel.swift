@@ -119,7 +119,6 @@ class ViewModel: NSObject, ObservableObject {
     
     func removeDrawing() {
         if let tapSelectedEntity = tapSelectedEntity {
-            //            tapSelectedNode.removeFromParentNode()
             tapSelectedEntity.removeFromParent()
             animationEntities.removeValue(forKey: tapSelectedEntity.id)
         }

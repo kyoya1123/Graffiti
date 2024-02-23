@@ -13,8 +13,6 @@ struct ContentView: View {
     
     @ObservedObject var viewModel: ViewModel
     
-    @State var isShowingRecordAlert: Bool = false
-    
     var body: some View {
         ZStack {
             Group {
@@ -117,7 +115,6 @@ struct ContentView: View {
     }
     
     @State var selectedDrawing: PKDrawing?
-    
     @State var isShowingDeleteAlert = false
     
     var frameList: some View {
@@ -162,7 +159,10 @@ struct ContentView: View {
                         set: { _ in self.selectedDrawing = nil }
                     ), arrowEdge: .trailing) {
                         Button {
-                          print("delete")
+                            selectedDrawing = nil
+                            withAnimation {
+                                viewModel.animationDrawings.remove(element: drawing)
+                            }
                         } label: {
                             Image(systemName: "trash")
                                 .foregroundStyle(.red)
@@ -183,17 +183,16 @@ struct ContentView: View {
     var addView: some View {
         VStack {
             VStack {
-                Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
+                Text("\(Image(systemName: "hand.tap")) Tap \(viewModel.onPlane ? "Wall or Plane" : "Screen") to Place Drawing")
                     .font(.system(size: 20, weight: .medium))
-                HStack {
-                    Picker("Place on", selection: $viewModel.onPlane) {
-                        Image(systemName: "square.filled.on.square").tag(true)
-                        Image(systemName: "balloon").tag(false)
-                    }
-                    .pickerStyle(.segmented)
-                    .clipShape(RoundedRectangle(cornerRadius: 5, style: .circular))
-                    .frame(width: 300)
+                Picker("Place on", selection: $viewModel.onPlane) {
+                    Image(systemName: "square.filled.on.square").tag(true)
+                    Image(systemName: "balloon").tag(false)
                 }
+                .pickerStyle(.segmented)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .circular))
+                .frame(width: 300)
             }
             .padding(20)
             .background(
@@ -236,6 +235,8 @@ struct ContentView: View {
             }
         }
     }
+    
+    @State var isShowingRecordAlert: Bool = false
     
     var captureButtons: some View {
         HStack {
@@ -351,4 +352,13 @@ extension PKDrawing: Hashable {
     }
     
     public var id: UUID { UUID() }
+}
+
+
+extension Array where Element: Equatable {
+    mutating func remove(element: Element) {
+        if let index = firstIndex(of: element) {
+            remove(at: index)
+        }
+    }
 }
