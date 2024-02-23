@@ -18,13 +18,11 @@ struct CanvasView: UIViewRepresentable {
     @Binding var toolPicker: PKToolPicker
 
     func makeUIView(context: Context) -> PKCanvasView {
-        canvasView.drawingPolicy = .anyInput
+        canvasView.drawingPolicy = .default
         canvasView.delegate = viewModel
+        canvasView.backgroundColor = .clear
         return canvasView
     }
 
-    func updateUIView(_ uiView: PKCanvasView, context: Context) {
-        uiView.backgroundColor = isCanvasVisible ? .white : .clear
-//        canvasView.backgroundColor = .gray
-    }
+    func updateUIView(_ uiView: PKCanvasView, context: Context) {}
 }

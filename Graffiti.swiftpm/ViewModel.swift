@@ -34,7 +34,7 @@ class ViewModel: NSObject, ObservableObject {
     @Published var toolPicker = PKToolPicker()
     @Published var isCanvasVisible = true
     @Published var isCanvasBlank = true
-    @Published var drawingHistory: [[Data]] = []
+    @Published var drawingHistory: [[PKDrawing]] = []
     var drawingFromHistory = PKDrawing()
     @Published var animationDrawings: [PKDrawing] = []
     
@@ -43,9 +43,7 @@ class ViewModel: NSObject, ObservableObject {
     @Published var showPreviewVideo = false
     
     var animationEntities = [UInt64: AnimationData]()
-    
-            var textureTimer: Timer!
-            let images = [UIImage(named: "drawing0")!, UIImage(named: "drawing1")!, UIImage(named: "drawing2")!]
+    var textureTimer: Timer!
     
     func drawingImage(canvasSize: Bool, drawing: PKDrawing? = nil) -> UIImage {
         (drawing ?? canvasView.drawing).image(from: canvasSize ? canvasView.bounds : canvasView.drawing.bounds, scale: 3)
@@ -75,7 +73,7 @@ class ViewModel: NSObject, ObservableObject {
         }
         if canvasView.drawing != drawingFromHistory {
             withAnimation {
-                drawingHistory.append(animationDrawings.isEmpty ? [canvasView.drawing.dataRepresentation()] : animationDrawings.map { $0.dataRepresentation() })
+                drawingHistory.append(animationDrawings.isEmpty ? [canvasView.drawing] : animationDrawings)
             }
         } else {
             drawingFromHistory = PKDrawing()

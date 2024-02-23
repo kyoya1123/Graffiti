@@ -61,23 +61,36 @@ struct ContentView: View {
     
     var canvasView: some View {
         ZStack {
+            Color.white
+            if !viewModel.animationDrawings.isEmpty {
+                Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: viewModel.animationDrawings.last!))
+                    .resizable()
+                    .opacity(0.6)
+            }
             CanvasView(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
             HStack {
                 Spacer()
-                Button {
-                    viewModel.animationDrawings.append(viewModel.canvasView.drawing)
-                    viewModel.canvasView.drawing = PKDrawing()
-                } label: {
-                    Image(systemName: "photo.badge.plus")
-                        .font(.system(size: 30))
-                        .foregroundColor(.accentColor)
-                        .padding()
-                        .background(
-                            .ultraThinMaterial
-                        )
-                        .clipShape(.circle)
+                VStack {
+                    frameList
+                        .opacity(viewModel.animationDrawings.isEmpty ? 0 : 1)
+                    Button {
+                        withAnimation {
+                            viewModel.animationDrawings.append(viewModel.canvasView.drawing)
+                        }
+                        viewModel.canvasView.drawing = PKDrawing()
+                    } label: {
+                        Image("film.badge.plus")
+                            .font(.system(size: 30))
+                            .foregroundColor(.accentColor)
+                            .padding()
+                            .background(
+                                .ultraThinMaterial
+                            )
+                            .baselineOffset(-3)
+                            .clipShape(.circle)
+                    }
+                    .opacity(viewModel.isCanvasBlank ? 0 : 1)
                 }
-                .opacity(viewModel.isCanvasBlank ? 0 : 1)
             }
             .padding(20)
             VStack {
@@ -88,19 +101,83 @@ struct ContentView: View {
                     } label: {
                         Image(systemName: "rays")
                             .font(.system(size: 30))
-                            .foregroundColor(.red)
+                            .foregroundColor(viewModel.isCanvasBlank ? Color(uiColor: .lightGray) : .red)
                             .padding()
                             .background(
                                 .ultraThinMaterial
                             )
                             .clipShape(.circle)
                     }
-                    .opacity(viewModel.isCanvasBlank ? 0 : 1)
+                    .disabled(viewModel.isCanvasBlank)
                     Spacer()
                 }
             }
             .padding(20)
         }
+    }
+    
+    @State var selectedDrawing: PKDrawing?
+    
+    @State var isShowingDeleteAlert = false
+    
+    var frameList: some View {
+        ScrollView(.vertical) {
+            LazyVStack(spacing: 8) {
+                Button {
+                    isShowingDeleteAlert = true
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 20))
+                        .foregroundColor(.red)
+                        .padding()
+                }
+                .alert("Delete All", isPresented: $isShowingDeleteAlert) {
+                    Button("Delete", role: .destructive) {
+                        withAnimation {
+                            viewModel.animationDrawings = []
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {
+                        isShowingDeleteAlert = false
+                    }
+                } message: {
+                    Text("Are you sure you want to delete all drawings?")
+                }
+                ForEach(viewModel.animationDrawings, id: \.self) { drawing in
+                    Button {
+                        selectedDrawing = drawing
+                    } label: {
+                        Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: drawing))
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .background(
+                                .ultraThinMaterial
+                                    .opacity(0.2)
+                            )
+                            .environment(\.colorScheme, .dark)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .popover(isPresented: Binding<Bool>(
+                        get: { self.selectedDrawing == drawing },
+                        set: { _ in self.selectedDrawing = nil }
+                    ), arrowEdge: .trailing) {
+                        Button {
+                          print("delete")
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+            }
+            .padding(8)
+        }
+        .background(
+            .thinMaterial
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .frame(width: 100)
+        .padding(.vertical)
     }
     
     var addView: some View {
@@ -206,15 +283,15 @@ struct ContentView: View {
     var historyCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 8) {
-                ForEach(viewModel.drawingHistory.reversed(), id: \.self) { drawingDataArray in
-                    let drawing = try! PKDrawing(data: drawingDataArray.last!)
+                ForEach(Array(viewModel.drawingHistory.reversed()), id: \.self) { drawingArray in
+                    let drawing = drawingArray.last!
                     Button {
                         viewModel.canvasView.drawing = drawing
                         viewModel.drawingFromHistory = drawing
-                        viewModel.animationDrawings = drawingDataArray.map { try! PKDrawing(data: $0) }.dropLast()
+                        viewModel.animationDrawings = drawingArray.dropLast()
                         viewModel.tapSelectedEntity = nil
                     } label: {
-                        Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
+                        Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: drawing))
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .background(
@@ -223,7 +300,7 @@ struct ContentView: View {
                             )
                             .environment(\.colorScheme, .dark)
                             .overlay {
-                                if drawingDataArray.count > 1 {
+                                if drawingArray.count > 1 {
                                     VStack {
                                         HStack {
                                             Spacer()
@@ -266,4 +343,12 @@ struct ContentView: View {
 
 #Preview {
     ContentView(viewModel: .init())
+}
+
+extension PKDrawing: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(dataRepresentation())
+    }
+    
+    public var id: UUID { UUID() }
 }
