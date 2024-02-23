@@ -14,13 +14,11 @@ struct ContentView: View {
     @ObservedObject var viewModel: ViewModel
     
     @State var isShowingRecordAlert: Bool = false
-    @State var onPlane: Bool = true
     
     var body: some View {
         ZStack {
             Group {
                 RealityView(arView: $viewModel.arView)
-//                ARSceneView(sceneView: $viewModel.sceneView)
                     .onTapGesture { location in
                         if viewModel.isRecording {
                             stopRecording()
@@ -31,6 +29,24 @@ struct ContentView: View {
                 Group {
                     ZStack {
                         CanvasView(viewModel: viewModel, canvasView: $viewModel.canvasView, isCanvasVisible: $viewModel.isCanvasVisible, toolPicker: $viewModel.toolPicker)
+                            HStack {
+                                Spacer()
+                                Button {
+                                    viewModel.animationDrawings.append(viewModel.canvasView.drawing)
+                                    viewModel.canvasView.drawing = PKDrawing()
+                                } label: {
+                                    Image(systemName: "photo.badge.plus")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.accentColor)
+                                        .padding()
+                                        .background(
+                                            .ultraThinMaterial
+                                        )
+                                        .clipShape(.circle)
+                                }
+                                .opacity(viewModel.isCanvasBlank ? 0 : 1)
+                            }
+                        .padding(20)
                         VStack {
                             Spacer()
                             HStack {
@@ -53,11 +69,11 @@ struct ContentView: View {
                         .padding(20)
                     }
                     .opacity(!viewModel.isCanvasVisible ? 0 : 1)
-                    Image(uiImage: viewModel.drawingImage(canvasSize: true))
+                    Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: viewModel.animationDrawings.isEmpty ? nil : viewModel.isCanvasBlank ? viewModel.animationDrawings.last! : nil))
                         .resizable()
-                        .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+                        .opacity(viewModel.isCanvasVisible || (viewModel.isCanvasBlank && viewModel.animationDrawings.isEmpty) ? 0 : 1)
                         .onTapGesture { location in
-                            viewModel.addDrawing(location: location, onPlane: onPlane)
+                            viewModel.addDrawing(location: location, onPlane: viewModel.onPlane)
                         }
                 }
                 .opacity(viewModel.isRecording ? 0 : 1)
@@ -68,13 +84,8 @@ struct ContentView: View {
                     VStack {
                         Text("\(Image(systemName: "hand.tap")) Tap screen to place drawing")
                             .font(.system(size: 20, weight: .medium))
-//                            .padding(20)
-//                            .background(
-//                                .ultraThinMaterial
-//                            )
-//                            .clipShape(Capsule())
                         HStack {
-                            Picker("Place on", selection: $onPlane) {
+                            Picker("Place on", selection: $viewModel.onPlane) {
                                 Image(systemName: "square.filled.on.square").tag(true)
                                 Image(systemName: "balloon").tag(false)
                             }
@@ -88,7 +99,7 @@ struct ContentView: View {
                         .ultraThinMaterial
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .opacity(viewModel.isCanvasVisible || viewModel.isCanvasBlank ? 0 : 1)
+                    .opacity(viewModel.isCanvasVisible || (viewModel.isCanvasBlank && viewModel.animationDrawings.isEmpty) ? 0 : 1)
                     Spacer()
                 }
                 VStack {
@@ -183,21 +194,38 @@ struct ContentView: View {
     var historyCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 8) {
-                ForEach(viewModel.drawingHistory.reversed(), id: \.self) { drawingData in
-                    let drawing = try! PKDrawing(data: drawingData)
+                ForEach(viewModel.drawingHistory.reversed(), id: \.self) { drawingDataArray in
+                    let drawing = try! PKDrawing(data: drawingDataArray.last!)
                     Button {
                         viewModel.canvasView.drawing = drawing
                         viewModel.drawingFromHistory = drawing
+                        viewModel.animationDrawings = drawingDataArray.map { try! PKDrawing(data: $0) }.dropLast()
                         viewModel.tapSelectedEntity = nil
                     } label: {
-                        Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .background(
-                                .ultraThinMaterial
-                                    .opacity(0.2)
-                            )
-                            .environment(\.colorScheme, .dark)
+                            Image(uiImage: drawing.image(from: viewModel.canvasView.bounds, scale: 3))
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .background(
+                                    .ultraThinMaterial
+                                        .opacity(0.2)
+                                )
+                                .environment(\.colorScheme, .dark)
+                                .overlay {
+                                    if drawingDataArray.count > 1 {
+                                        VStack {
+                                            HStack {
+                                                Spacer()
+                                                Image(systemName: "film.circle.fill")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 25, height: 25)
+                                                    .padding(4)
+                                                    .foregroundStyle(.white)
+                                            }
+                                            Spacer()
+                                        }
+                                    }
+                                }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
