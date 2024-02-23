@@ -114,7 +114,6 @@ struct ContentView: View {
         }
     }
     
-    @State var selectedDrawing: PKDrawing?
     @State var isShowingDeleteAlert = false
     
     var frameList: some View {
@@ -141,8 +140,22 @@ struct ContentView: View {
                     Text("Are you sure you want to delete all drawings?")
                 }
                 ForEach(viewModel.animationDrawings, id: \.self) { drawing in
-                    Button {
-                        selectedDrawing = drawing
+                    Menu {
+                        HStack {
+                            Button {
+                                viewModel.canvasView.drawing = drawing
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                            Button(role: .destructive) {
+                                withAnimation {
+                                    viewModel.animationDrawings.remove(element: drawing)
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     } label: {
                         Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: drawing))
                             .resizable()
@@ -154,20 +167,6 @@ struct ContentView: View {
                             .environment(\.colorScheme, .dark)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .popover(isPresented: Binding<Bool>(
-                        get: { self.selectedDrawing == drawing },
-                        set: { _ in self.selectedDrawing = nil }
-                    ), arrowEdge: .trailing) {
-                        Button {
-                            selectedDrawing = nil
-                            withAnimation {
-                                viewModel.animationDrawings.remove(element: drawing)
-                            }
-                        } label: {
-                            Image(systemName: "trash")
-                                .foregroundStyle(.red)
-                        }
-                    }
                 }
             }
             .padding(8)
