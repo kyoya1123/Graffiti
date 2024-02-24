@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  ReplayPreviewView.swift
+//
 //
 //  Created by Kyoya Yamaguchi on 2024/02/21.
 //

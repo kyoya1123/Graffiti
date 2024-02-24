@@ -62,7 +62,6 @@ struct ContentView: View {
     }
     
     @State var player = AVPlayer(url: Bundle.main.url(forResource: "instruction", withExtension: "mp4")!)
-    
     @State var isShowingVideoView = true
     
     var videoSheet: some View {
@@ -391,13 +390,4 @@ extension PKDrawing: Hashable {
     }
     
     public var id: UUID { UUID() }
-}
-
-
-extension Array where Element: Equatable {
-    mutating func remove(element: Element) {
-        if let index = firstIndex(of: element) {
-            remove(at: index)
-        }
-    }
 }

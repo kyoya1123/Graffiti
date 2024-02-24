@@ -1,5 +1,5 @@
 //
-//  ARView.swift
+//  RealityView.swift
 //  Graffiti
 //
 //  Created by Kyoya Yamaguchi on 2024/02/18.
