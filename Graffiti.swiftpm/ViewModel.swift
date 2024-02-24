@@ -12,6 +12,7 @@ import RealityKit
 import ReplayKit
 import ARKit
 import SceneKit
+import AVKit
 
 class AnimationData {
     var modelEntity: ModelEntity
@@ -27,6 +28,7 @@ class AnimationData {
 }
 
 class ViewModel: NSObject, ObservableObject {
+    
     @Published var arView = ARView()
     @Published var onPlane: Bool = true
     
@@ -55,7 +57,6 @@ class ViewModel: NSObject, ObservableObject {
             self.updateTexture()
         }
         RPScreenRecorder.shared().isMicrophoneEnabled = true
-        updateToolPicker()
     }
     
     

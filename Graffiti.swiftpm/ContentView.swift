@@ -5,6 +5,7 @@
 //  Created by Kyoya Yamaguchi on 2024/02/18.
 //
 
+import AVKit
 import SwiftUI
 import ReplayKit
 import PencilKit
@@ -55,6 +56,45 @@ struct ContentView: View {
                 
             }
         }
+        .sheet(isPresented: $isShowingVideoView) {
+                videoSheet
+        }
+    }
+    
+    @State var player = AVPlayer(url: Bundle.main.url(forResource: "instruction", withExtension: "mp4")!)
+    
+    @State var isShowingVideoView = true
+    
+    var videoSheet: some View {
+            VStack {
+                Spacer()
+                Text("Draw Graffiti on Wall or Plane or in the Air")
+                    .font(.title)
+                Text("and take fun videos and photos!")
+                    .font(.title3)
+                Spacer()
+                VideoPlayer(player: player)
+                    .aspectRatio(1280 / 896, contentMode: .fit)
+                    .onAppear {
+                        player.play()
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .padding(.horizontal, 20)
+                Spacer()
+                Button {
+                    isShowingVideoView = false
+                    viewModel.updateToolPicker()
+                } label: {
+                    Text("Start!")
+                        .bold()
+                        .font(.system(size: 20))
+                }
+                .frame(width: 200, height: 60)
+                .background(Color.accentColor)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                Spacer()
+            }
     }
     
     var canvasView: some View {
