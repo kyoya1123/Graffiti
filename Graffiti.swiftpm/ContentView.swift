@@ -61,11 +61,11 @@ struct ContentView: View {
                 viewModel.drawingHistory = drawingHistoryData.map { ($0 as! [Data]).map { try! PKDrawing(data: $0) } }
             }
         }
-        .sheet(isPresented: $isShowingVideoView) {
-                videoSheet
-        }
         .onChange(of: viewModel.drawingHistory) {
             UserDefaults.standard.set(viewModel.drawingHistory.map { $0.map { $0.dataRepresentation() }}, forKey: "drawingHistory")
+        }
+        .sheet(isPresented: $isShowingVideoView) {
+                videoSheet
         }
     }
     
@@ -396,12 +396,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView(viewModel: .init())
-}
-
-extension PKDrawing: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(dataRepresentation())
-    }
-    
-    public var id: UUID { UUID() }
 }
