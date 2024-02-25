@@ -72,7 +72,7 @@ class ViewModel: NSObject, ObservableObject {
         if !animationDrawings.isEmpty, !isCanvasBlank {
             animationDrawings.append(canvasView.drawing)
         }
-        if canvasView.drawing != drawingFromHistory {
+        if canvasView.drawing != drawingFromHistory && !isCanvasBlank {
             withAnimation {
                 drawingHistory.append(animationDrawings.isEmpty ? [canvasView.drawing] : animationDrawings)
             }
@@ -177,4 +177,3 @@ extension ViewModel: PKCanvasViewDelegate {
         isCanvasBlank = canvasView.drawing.strokes.isEmpty
     }
 }
-

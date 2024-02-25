@@ -56,8 +56,16 @@ struct ContentView: View {
                 
             }
         }
+        .onAppear {
+            if let drawingHistoryData = UserDefaults.standard.array(forKey: "drawingHistory") {
+                viewModel.drawingHistory = drawingHistoryData.map { ($0 as! [Data]).map { try! PKDrawing(data: $0) } }
+            }
+        }
         .sheet(isPresented: $isShowingVideoView) {
                 videoSheet
+        }
+        .onChange(of: viewModel.drawingHistory) {
+            UserDefaults.standard.set(viewModel.drawingHistory.map { $0.map { $0.dataRepresentation() }}, forKey: "drawingHistory")
         }
     }
     
