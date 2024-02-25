@@ -65,7 +65,7 @@ struct ContentView: View {
             UserDefaults.standard.set(viewModel.drawingHistory.map { $0.map { $0.dataRepresentation() }}, forKey: "drawingHistory")
         }
         .sheet(isPresented: $isShowingVideoView) {
-                videoSheet
+            videoSheet
         }
     }
     
@@ -73,35 +73,35 @@ struct ContentView: View {
     @State var isShowingVideoView = true
     
     var videoSheet: some View {
-            VStack {
-                Spacer()
-                Text("Draw Graffiti on Wall or Plane or in the Air")
-                    .font(.title)
-                Text("and take fun videos and photos!")
-                    .font(.title3)
-                Spacer()
-                VideoPlayer(player: player)
-                    .aspectRatio(1280 / 896, contentMode: .fit)
-                    .onAppear {
-                        player.play()
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .padding(.horizontal, 20)
-                Spacer()
-                Button {
-                    isShowingVideoView = false
-                    viewModel.updateToolPicker()
-                } label: {
-                    Text("Start!")
-                        .bold()
-                        .font(.system(size: 20))
+        VStack {
+            Spacer()
+            Text("Draw Graffiti on Wall or Plane or in the Air")
+                .font(.title)
+            Text("and take fun videos and photos!")
+                .font(.title3)
+            Spacer()
+            VideoPlayer(player: player)
+                .aspectRatio(1280 / 896, contentMode: .fit)
+                .onAppear {
+                    player.play()
                 }
-                .frame(width: 200, height: 60)
-                .background(Color.accentColor)
-                .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                Spacer()
+                .padding(.horizontal, 20)
+            Spacer()
+            Button {
+                isShowingVideoView = false
+                viewModel.updateToolPicker()
+            } label: {
+                Text("Start!")
+                    .bold()
+                    .font(.system(size: 20))
             }
+            .frame(width: 200, height: 60)
+            .background(Color.accentColor)
+            .foregroundStyle(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            Spacer()
+        }
     }
     
     var canvasView: some View {
@@ -237,23 +237,20 @@ struct ContentView: View {
     
     var addView: some View {
         VStack {
-            VStack {
-                Text("\(Image(systemName: "hand.tap")) Tap \(viewModel.onPlane ? "Wall or Plane" : "Screen") to Place Drawing")
-                    .font(.system(size: 20, weight: .medium))
-                Picker("Place on", selection: $viewModel.onPlane) {
-                    Image(systemName: "square.filled.on.square").tag(true)
-                    Image(systemName: "balloon").tag(false)
-                }
-                .pickerStyle(.segmented)
+            Text("\(Image(systemName: "hand.tap")) Tap \(viewModel.onPlane ? "Wall or Plane" : "Screen") to Place Drawing")
+                .font(.system(size: 20, weight: .medium))
+                .padding(20)
                 .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .circular))
-                .frame(width: 300)
+                .clipShape(.capsule)
+            Picker("Place on", selection: $viewModel.onPlane) {
+                Image(systemName: "square.filled.on.square").tag(true)
+                Image(systemName: "balloon").tag(false)
             }
-            .padding(20)
-            .background(
-                .ultraThinMaterial
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .pickerStyle(.segmented)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 7, style: .circular))
+            .frame(width: 300)
+            
             Spacer()
         }
     }
