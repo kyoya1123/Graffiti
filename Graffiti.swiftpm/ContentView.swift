@@ -219,6 +219,9 @@ struct ContentView: View {
                             Image(systemName: "trash")
                                 .foregroundStyle(.red)
                         }
+                        .onDisappear {
+                            selectedButton = nil
+                        }
                     }
                 }
             }
