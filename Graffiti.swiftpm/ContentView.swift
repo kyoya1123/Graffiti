@@ -70,7 +70,7 @@ struct ContentView: View {
     }
     
     @State var player = AVPlayer(url: Bundle.main.url(forResource: "instruction", withExtension: "mp4")!)
-    @State var isShowingVideoView = true
+    @State var isShowingVideoView = false
     
     var videoSheet: some View {
         VStack {
