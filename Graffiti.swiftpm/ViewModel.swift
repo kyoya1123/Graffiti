@@ -98,7 +98,9 @@ class ViewModel: NSObject, ObservableObject {
         var anchor: AnchorEntity!
         if onPlane {
             guard let result = arView.raycast(from: location, allowing: .estimatedPlane, alignment: .any).first else  { return }
+            #if !(targetEnvironment(simulator))
             anchor = AnchorEntity(raycastResult: result)
+            #endif
         } else {
             let cameraTransform: Transform = arView.cameraTransform
             let localCameraPosition: SIMD3<Float> = modelEntity.convert(position: cameraTransform.translation, from: nil)
