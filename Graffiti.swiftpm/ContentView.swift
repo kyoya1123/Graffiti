@@ -161,6 +161,7 @@ struct ContentView: View {
         }
     }
     
+    @State var selectedButton: PKDrawing?
     @State var isShowingDeleteAlert = false
     
     var frameList: some View {
@@ -187,22 +188,7 @@ struct ContentView: View {
                     Text("Are you sure you want to delete all drawings?")
                 }
                 ForEach(viewModel.animationDrawings, id: \.self) { drawing in
-                    Menu {
-                        HStack {
-                            Button {
-                                viewModel.canvasView.drawing = drawing
-                            } label: {
-                                Label("Copy", systemImage: "doc.on.doc")
-                                    .foregroundStyle(Color.accentColor)
-                            }
-                            Button(role: .destructive) {
-                                withAnimation {
-                                    viewModel.animationDrawings.remove(element: drawing)
-                                }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
+                    Button {
                     } label: {
                         Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: drawing))
                             .resizable()
@@ -212,8 +198,28 @@ struct ContentView: View {
                                     .opacity(0.2)
                             )
                             .environment(\.colorScheme, .dark)
+                            .onTapGesture {
+                                viewModel.canvasView.drawing = drawing
+                            }
+                            .onLongPressGesture(minimumDuration: 0.1) {
+                                selectedButton = drawing
+                            }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .popover(isPresented: Binding<Bool>(
+                        get: { selectedButton == drawing },
+                        set: { _ in }
+                    )) {
+                        Button {
+                            selectedButton = nil
+                            withAnimation {
+                                viewModel.animationDrawings.remove(element: drawing)
+                            }
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.red)
+                        }
+                    }
                 }
             }
             .padding(8)
