@@ -39,10 +39,11 @@ class ViewModel: NSObject, ObservableObject {
     @Published var drawingHistory: [[PKDrawing]] = []
     var drawingFromHistory = PKDrawing()
     @Published var animationDrawings: [PKDrawing] = []
+//    @Published var preMadeMaterials: [UnlitMaterial] = []
     
     @Published var replayView: ReplayPreviewView!
     @Published var isRecording = false
-    @Published var showPreviewVideo = false
+    @Published var showPreviewVideo = true
     
     var animationEntities = [UInt64: AnimationData]()
     var textureTimer: Timer!
@@ -59,7 +60,6 @@ class ViewModel: NSObject, ObservableObject {
         RPScreenRecorder.shared().isMicrophoneEnabled = true
     }
     
-    
     @Published var tapSelectedEntity: Entity?
     
     func tap(location: CGPoint) {
@@ -71,11 +71,14 @@ class ViewModel: NSObject, ObservableObject {
     func addDrawing(location: CGPoint, onPlane: Bool = true) {
         if !animationDrawings.isEmpty, !isCanvasBlank {
             animationDrawings.append(canvasView.drawing)
+//            preMadeMaterials.append(createTexture(drawing: drawingImage(canvasSize: true).cgImage))
         }
-        if canvasView.drawing != drawingFromHistory && !isCanvasBlank {
+
+        if canvasView.drawing != drawingFromHistory && (!animationDrawings.isEmpty || (animationDrawings.isEmpty && !isCanvasBlank)) {
             withAnimation {
                 drawingHistory.append(animationDrawings.isEmpty ? [canvasView.drawing] : animationDrawings)
             }
+            saveDrawingHistory()
         } else {
             drawingFromHistory = PKDrawing()
         }
@@ -165,12 +168,20 @@ class ViewModel: NSObject, ObservableObject {
         }
     }
     
-    private func createTexture(drawing: CGImage?) -> UnlitMaterial {
+    
+    
+    func createTexture(drawing: CGImage?) -> UnlitMaterial {
         guard let texture = try? TextureResource.generate(from: drawing!, options: .init(semantic: .hdrColor)) else { return UnlitMaterial() }
         var unlitMaterial = UnlitMaterial()
         unlitMaterial.color = .init(tint: .white, texture: .init(texture))
         unlitMaterial.blending = .transparent(opacity: .init(floatLiteral: 1))
         return unlitMaterial
+    }
+    
+    func saveDrawingHistory() {
+        DispatchQueue.global(qos: .background).async {
+            UserDefaults.standard.set(self.drawingHistory.map { $0.map { $0.dataRepresentation() }}, forKey: "drawingHistory")
+        }
     }
 }
 

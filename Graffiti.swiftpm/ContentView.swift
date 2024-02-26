@@ -40,8 +40,10 @@ struct ContentView: View {
                 VStack {
                     topButtons
                     Spacer()
-                    historyCarousel
-                        .opacity(viewModel.isCanvasVisible || viewModel.drawingHistory.isEmpty ? 0 : 1)
+                    if !viewModel.isCanvasVisible {
+                        historyCarousel
+                            .opacity(viewModel.drawingHistory.isEmpty ? 0 : 1)
+                    }
                 }
                 captureButtons
                     .opacity(viewModel.isCanvasVisible ? 0 : 1)
@@ -67,10 +69,11 @@ struct ContentView: View {
         .sheet(isPresented: $isShowingVideoView) {
             videoSheet
         }
+        .preferredColorScheme(.light)
     }
     
     @State var player = AVPlayer(url: Bundle.main.url(forResource: "instruction", withExtension: "mp4")!)
-    @State var isShowingVideoView = false
+    @State var isShowingVideoView = true
     
     var videoSheet: some View {
         VStack {
@@ -95,12 +98,15 @@ struct ContentView: View {
                 Text("Start!")
                     .bold()
                     .font(.system(size: 20))
+                    .frame(width: 200, height: 60)
+                    .background(Color.accentColor)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
-            .frame(width: 200, height: 60)
-            .background(Color.accentColor)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             Spacer()
+        }
+        .onDisappear {
+            isShowingVideoView = false
         }
     }
     
@@ -116,8 +122,10 @@ struct ContentView: View {
             HStack {
                 Spacer()
                 VStack {
-                    frameList
+                    if viewModel.isCanvasVisible {
+                        frameList
                         .opacity(viewModel.animationDrawings.isEmpty ? 0 : 1)
+                    }
                     Button {
                         withAnimation {
                             viewModel.animationDrawings.append(viewModel.canvasView.drawing)
@@ -161,7 +169,7 @@ struct ContentView: View {
         }
     }
     
-    @State var selectedButton: PKDrawing?
+    @State var selectedButton: Int?
     @State var isShowingDeleteAlert = false
     
     var frameList: some View {
@@ -187,7 +195,8 @@ struct ContentView: View {
                 } message: {
                     Text("Are you sure you want to delete all drawings?")
                 }
-                ForEach(viewModel.animationDrawings, id: \.self) { drawing in
+                ForEach(0..<viewModel.animationDrawings.endIndex, id: \.self) { index in
+                    let drawing = viewModel.animationDrawings[index]
                     Button {
                     } label: {
                         Image(uiImage: viewModel.drawingImage(canvasSize: true, drawing: drawing))
@@ -202,12 +211,12 @@ struct ContentView: View {
                                 viewModel.canvasView.drawing = drawing
                             }
                             .onLongPressGesture(minimumDuration: 0.1) {
-                                selectedButton = drawing
+                                selectedButton = index
                             }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .popover(isPresented: Binding<Bool>(
-                        get: { selectedButton == drawing },
+                        get: { selectedButton == index },
                         set: { _ in }
                     )) {
                         Button {
@@ -336,7 +345,8 @@ struct ContentView: View {
     var historyCarousel: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 8) {
-                ForEach(Array(viewModel.drawingHistory.reversed()), id: \.self) { drawingArray in
+                ForEach(0..<viewModel.drawingHistory.endIndex, id: \.self) { index in
+                    let drawingArray = viewModel.drawingHistory.reversed()[index]
                     let drawing = drawingArray.last!
                     Button {
                         viewModel.canvasView.drawing = drawing
