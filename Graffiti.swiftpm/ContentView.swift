@@ -9,6 +9,7 @@ import AVKit
 import SwiftUI
 import ReplayKit
 import PencilKit
+import TipKit
 
 struct ContentView: View {
     
@@ -78,10 +79,10 @@ struct ContentView: View {
     var videoSheet: some View {
         VStack {
             Spacer()
-            Text("Draw Graffiti on Wall or Plane or in the Air")
+            Text("Draw Graffiti on Wall, Floor, Ceiling or in Mid-Air")
                 .font(.title)
-            Text("and take fun videos and photos!")
-                .font(.title3)
+            Text("And take fun videos and photos!")
+                .font(.title2)
             Spacer()
             VideoPlayer(player: player)
                 .aspectRatio(1280 / 896, contentMode: .fit)
@@ -110,6 +111,8 @@ struct ContentView: View {
         }
     }
     
+    var animationButtonTip = AnimationButtonTip()
+    
     var canvasView: some View {
         ZStack {
             Color.white
@@ -124,23 +127,28 @@ struct ContentView: View {
                 VStack {
                     if viewModel.isCanvasVisible {
                         frameList
-                        .opacity(viewModel.animationDrawings.isEmpty ? 0 : 1)
+                            .opacity(viewModel.animationDrawings.isEmpty ? 0 : 1)
                     }
-                    Button {
-                        withAnimation {
-                            viewModel.animationDrawings.append(viewModel.canvasView.drawing)
+                    VStack {
+                        TipView(animationButtonTip, arrowEdge: .bottom)
+                            .fixedSize()
+                        Button {
+                            animationButtonTip.invalidate(reason: .actionPerformed)
+                            withAnimation {
+                                viewModel.animationDrawings.append(viewModel.canvasView.drawing)
+                            }
+                            viewModel.canvasView.drawing = PKDrawing()
+                        } label: {
+                            Image("film.badge.plus")
+                                .font(.system(size: 30))
+                                .foregroundColor(.accentColor)
+                                .padding()
+                                .background(
+                                    .ultraThinMaterial
+                                )
+                                .baselineOffset(-3)
+                                .clipShape(.circle)
                         }
-                        viewModel.canvasView.drawing = PKDrawing()
-                    } label: {
-                        Image("film.badge.plus")
-                            .font(.system(size: 30))
-                            .foregroundColor(.accentColor)
-                            .padding()
-                            .background(
-                                .ultraThinMaterial
-                            )
-                            .baselineOffset(-3)
-                            .clipShape(.circle)
                     }
                     .opacity(viewModel.isCanvasBlank ? 0 : 1)
                 }
@@ -264,9 +272,12 @@ struct ContentView: View {
         }
     }
     
+    var arButtonTip = ARButtonTip()
+    
     var topButtons: some View {
         HStack {
             Button {
+                arButtonTip.invalidate(reason: .actionPerformed)
                 viewModel.isCanvasVisible.toggle()
                 viewModel.updateToolPicker()
                 viewModel.tapSelectedEntity = nil
@@ -279,6 +290,8 @@ struct ContentView: View {
                 .ultraThinMaterial
             )
             .clipShape(.circle)
+            TipView(arButtonTip, arrowEdge: .leading)
+                .fixedSize()
             Spacer()
             if viewModel.tapSelectedEntity != nil {
                 Button {
@@ -294,6 +307,12 @@ struct ContentView: View {
                         .clipShape(.circle)
                 }
             }
+        }
+        .task {
+            try? Tips.configure([
+                .displayFrequency(.immediate),
+                .datastoreLocation(.applicationDefault)
+            ])
         }
     }
     

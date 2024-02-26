@@ -39,7 +39,6 @@ class ViewModel: NSObject, ObservableObject {
     @Published var drawingHistory: [[PKDrawing]] = []
     var drawingFromHistory = PKDrawing()
     @Published var animationDrawings: [PKDrawing] = []
-//    @Published var preMadeMaterials: [UnlitMaterial] = []
     
     @Published var replayView: ReplayPreviewView!
     @Published var isRecording = false
@@ -71,7 +70,6 @@ class ViewModel: NSObject, ObservableObject {
     func addDrawing(location: CGPoint, onPlane: Bool = true) {
         if !animationDrawings.isEmpty, !isCanvasBlank {
             animationDrawings.append(canvasView.drawing)
-//            preMadeMaterials.append(createTexture(drawing: drawingImage(canvasSize: true).cgImage))
         }
 
         if canvasView.drawing != drawingFromHistory && (!animationDrawings.isEmpty || (animationDrawings.isEmpty && !isCanvasBlank)) {
@@ -167,8 +165,6 @@ class ViewModel: NSObject, ObservableObject {
             animationData.modelEntity.model?.materials = [animationData.materials[animationData.count]]
         }
     }
-    
-    
     
     func createTexture(drawing: CGImage?) -> UnlitMaterial {
         guard let texture = try? TextureResource.generate(from: drawing!, options: .init(semantic: .hdrColor)) else { return UnlitMaterial() }
